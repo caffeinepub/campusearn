@@ -1,0 +1,249 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-11T19:49:27.090Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 13,
+    "implemented": 11,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Preserve all existing backend stable state and data across this upgrade (users, tasks, wallets, escrow, withdrawals, transactions, activity logs). Do not clear, reinitialize, or remove the existing database/state during deployment or upgrade.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-10",
+        "summary": "Ensure the system records a complete Activity Log for all required actions (Task Created, Accepted, Proof Uploaded, Approved, Rejected, Wallet Credited/Debited, Withdrawal Requested/Approved) and provide an Admin-only view that reads from the backend.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Admin/ActivityLogsPage.tsx",
+          "frontend/src/components/layout/AppShell.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Admin/ActivityLogsPage.tsx",
+          "frontend/src/components/layout/AppShell.tsx"
+        ]
+      },
+      {
+        "id": "REQ-11",
+        "summary": "Add Ads monetization UI placements and backend configuration: show a dashboard banner, a small banner in task details, and an optional interstitial after task completion. Admin can configure frequency. Record ad earnings in ₹ with a simple internal earnings model (no third-party ad network integration).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/ads/AdPlacementBanner.tsx",
+          "frontend/src/components/ads/AdInterstitial.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/pages/Admin/AdsSettingsPage.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/Admin/AdminDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/ads/AdPlacementBanner.tsx",
+          "frontend/src/components/ads/AdInterstitial.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/pages/Admin/AdsSettingsPage.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/layout/AppShell.tsx"
+        ]
+      },
+      {
+        "id": "REQ-12",
+        "summary": "Ensure all editable forms (Profile, Task Creation, Deposit, Withdraw, Proof Upload, Admin Approve/Reject) are connected to backend mutations and update the UI immediately via React Query cache invalidation; all changes must persist after refresh and deep links must remain navigable on mobile via shared link.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/App.tsx",
+          "frontend/public/404.html"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-13",
+        "summary": "Apply the requested UI design direction consistently across all pages: blue & white theme, clean marketplace layout, card-based task display, sidebar navigation, modern typography, and mobile responsive behavior; ensure all user-facing text is in English.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Add support for the additional marketplace role \"Business\" alongside existing roles, and enforce role-based permissions across backend and frontend: Student can accept/submit proof/withdraw; TaskPoster and Business can deposit and create tasks; only Admin can approve/reject proofs and approve withdrawals; providers can view progress but cannot complete/review their own tasks.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/pages/Auth/AuthLandingPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/pages/Auth/AuthLandingPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement deterministic demo seeding that (a) creates the 6 requested demo user profiles and initial wallet balances, and (b) creates the 10 requested demo tasks with all required fields, without deleting existing data. Seeding must be idempotent (safe to run multiple times) and must ensure seeded tasks appear immediately on the Student dashboard (Status = Open).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Update the user profile data model and UI to remove student-year/college references and to match the requested Profile Form fields: Full Name, Contact Number, Email (editable), Wallet (read-only), Role (read-only). Profile must be pre-filled from the database for the current logged-in user and saved changes must persist after refresh.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Student/StudentProfilePage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/layout/AppShell.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Student/StudentProfilePage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/layout/AppShell.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Ensure all money values across the app are displayed and handled as Indian Rupees (₹), including wallet balances, task payments, escrow, commissions, deposits, withdrawals, ad earnings, and transaction history.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/formatInr.ts",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/pages/Student/WalletPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/components/transactions/TransactionHistoryTable.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/formatInr.ts",
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/pages/Student/WalletPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/components/transactions/TransactionHistoryTable.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Implement the editable Task Creation Form for TaskPoster and Business: fields Title, Short Description, Full Description, Payment (₹), Category, Location, Proof Required (Yes/No). On create, save task to database, set status to Open, and deduct the payment from the provider wallet into escrow; prevent creation if insufficient balance.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Provider/ProviderDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Provider/ProviderDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Implement/validate the full task status workflow and anti-abuse constraints in the backend and reflect them in UI: Open → In Progress → Proof Submitted → Under Review → Completed; Reject returns task to In Progress. Prevent duplicate acceptance, accepting own task, and any provider editing of a task once accepted.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/tasks/StatusBadge.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Upgrade the Student-facing Task Dashboard and Task Details experience to match the requested marketplace layout and role-based actions: Dashboard lists all Open tasks with card fields (Title, Short Description, Category, Payment ₹ bold, Location, Posted By, Status Badge, Accept button for Students only); clicking a card opens Task Details; Task Details shows the specified top and middle sections and role-based actions (Student accept/upload; Admin approve/reject; provider view-only).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "frontend/src/components/tasks/TaskCard.tsx",
+          "frontend/src/pages/Tasks/TaskDetailsPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Implement the end-to-end wallet workflows with secure persistence: provider deposits (TaskPoster/Business), escrow deduction on task creation, completion payout split (90% to Student, 10% to Admin), student withdrawal request with admin approval, and an immutable transaction history that shows Date, Task (when applicable), Credit/Debit, Amount (₹), and Status.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/transactions/TransactionHistoryTable.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Provider/ProviderDashboardPage.tsx",
+          "frontend/src/pages/Student/WalletPage.tsx",
+          "frontend/src/pages/Student/TransactionHistoryPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/transactions/TransactionHistoryTable.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/Provider/ProviderDashboardPage.tsx",
+          "frontend/src/pages/Student/WalletPage.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/ads/AdInterstitial.tsx",
+    "frontend/src/components/ads/AdPlacementBanner.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/components/tasks/TaskCard.tsx",
+    "frontend/src/components/transactions/TransactionHistoryTable.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/Admin/ActivityLogsPage.tsx",
+    "frontend/src/pages/Admin/AdsSettingsPage.tsx",
+    "frontend/src/pages/Auth/AuthLandingPage.tsx",
+    "frontend/src/pages/Provider/CreateTaskPage.tsx",
+    "frontend/src/pages/Provider/ProviderDashboardPage.tsx",
+    "frontend/src/pages/Student/StudentDashboardPage.tsx",
+    "frontend/src/pages/Student/StudentProfilePage.tsx",
+    "frontend/src/pages/Student/WalletPage.tsx",
+    "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+    "frontend/src/utils/formatInr.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

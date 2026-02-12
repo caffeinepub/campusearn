@@ -1,0 +1,370 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "CampusEarn frontend upgrade: INR marketplace UI, role workflows, profiles, wallets, ads, and admin views",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Represent the new Business role in the UI and enforce role-appropriate navigation and page access (Student vs TaskPoster/Business vs Admin).",
+      "acceptanceCriteria": [
+        "A \"Business\" role exists and is selectable/represented in UI and backend authorization checks",
+        "Backend rejects disallowed actions with clear errors (e.g., Student cannot create tasks; Provider cannot review tasks)",
+        "Frontend navigation/dashboard content is role-appropriate for Student/TaskPoster/Business/Admin"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Update sidebar/navigation logic to treat UserAppRole.business as a provider role (same provider nav set as TaskPoster), and ensure Admin vs non-Admin menus remain separated. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "operation": "modify",
+          "description": "Adjust access control copy and guards so both TaskPoster and Business can access the create-task flow, while Students cannot. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Refine role-based action rendering to match permissions: Student accept/upload; Admin approve/reject; provider view-only (no self-complete/review). Ensure disallowed actions are not shown and backend errors are surfaced. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Auth/AuthLandingPage.tsx",
+          "operation": "modify",
+          "description": "Ensure registration/onboarding UI includes selecting Business alongside Student and TaskPoster, and that post-login routing lands on the correct role dashboard. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Replace the profile UI with the requested fields (no college/year) and wire edits to backend-backed profile persistence.",
+      "acceptanceCriteria": [
+        "No UI pages reference or require college/year inputs for profile completion",
+        "Current user sees profile fields pre-filled from backend; edits to name/contact/email persist after refresh",
+        "Wallet and Role are displayed but not editable in the profile form",
+        "Backend exposes a safe profile update method that does not allow changing wallet balance or role via profile updates"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Student/StudentProfilePage.tsx",
+          "operation": "modify",
+          "description": "Replace the current college/year + verification UI with a profile form containing: Full Name, Contact Number, Email (editable), Wallet (read-only), Role (read-only). Prefill from backend and persist via a dedicated profile-save mutation; remove all student-year/college references and related validation. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add/adjust React Query hooks for profile editing to support updating name/phone/email while keeping wallet/role read-only client-side (e.g., merge current profile with edited fields and call the backend profile save function). Ensure successful saves invalidate currentUserProfile/userProfile/walletBalance and show English-only toasts. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Update the user menu display to show the human-readable profile name (from currentUserProfile) instead of the principal substring when available, consistent with the authorization component guidance. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Standardize INR (₹) formatting for all money amounts across dashboards, tasks, wallet pages, ads earnings, and transactions.",
+      "acceptanceCriteria": [
+        "All currency UI displays use the ₹ prefix and no other currency symbols",
+        "All wallet/payment logic uses integer INR amounts consistently (no mixed units)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/formatInr.ts",
+          "operation": "create",
+          "description": "Create a small utility to format bigint/number amounts as integer INR display strings with the ₹ prefix (no decimals) and safe bigint-to-number handling for UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for wallet balance and earnings cards and any task payment previews. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for deposit balance display and validation/error messages (₹ amounts). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/WalletPage.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for balance, validation, and transaction preview amounts. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/tasks/TaskCard.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for card payment display (₹) and ensure bold payment emphasis remains. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for payment display and any admin review payment messaging. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/transactions/TransactionHistoryTable.tsx",
+          "operation": "modify",
+          "description": "Use the shared INR formatting utility for all amount cells and ensure Credit/Debit sign + ₹ formatting is consistent. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Upgrade the provider task creation form UI for TaskPoster/Business with the requested fields and backend-connected submission + post-create refresh.",
+      "acceptanceCriteria": [
+        "Only TaskPoster/Business can access/submit the create-task form; Students cannot create tasks",
+        "Creating a task decreases provider deposit/wallet balance by the payment amount and increases escrow locked for that task",
+        "Task appears immediately in Open tasks on Student dashboard (react-query invalidation/refresh)",
+        "Backend rejects task creation when wallet balance is insufficient and frontend surfaces the error"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Provider/CreateTaskPage.tsx",
+          "operation": "modify",
+          "description": "Update the form to match required fields: Title, Short Description, Full Description, Payment (₹), Category, Location, Proof Required (Yes/No). Keep the existing insufficient-balance gate and ensure backend errors are shown in English. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the create-task mutation to accept the new UI field shape (short/full description, proof-required flag) and trigger the required cache invalidations so the Student Open Tasks list updates immediately after creation. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Provider/ProviderDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure provider dashboard reflects post-create balance changes by relying on React Query invalidation/refetch and that all money displays are ₹. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Reflect the complete task status workflow in UI and enforce anti-abuse constraints via UI gating and clear error handling.",
+      "acceptanceCriteria": [
+        "Student can accept an Open task exactly once; subsequent accept attempts fail",
+        "Provider cannot accept their own task; backend enforces this",
+        "Only the accepted student can submit proof, and only when task is In Progress",
+        "Admin can approve/reject only when proof is submitted; approve completes and reject returns to In Progress",
+        "Any attempt to mutate restricted fields/statuses outside the allowed transitions is rejected server-side"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/tasks/StatusBadge.tsx",
+          "operation": "modify",
+          "description": "Align status labels/colors to the requested workflow: Open (Green) → In Progress (Orange) → Proof Submitted (Purple) → Under Review → Completed (Blue); ensure Rejected is labeled \"Rejected\" and visually distinct. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Tighten conditional rendering for Accept/Upload Proof/Admin Review buttons to match role+status rules; for forbidden actions, hide buttons and gracefully show backend error messages when actions are attempted via stale UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/tasks/TaskCard.tsx",
+          "operation": "modify",
+          "description": "Ensure Accept button appears only for Students and only for Open tasks, and is hidden for the task provider; surface backend rejection errors via existing mutation error handling. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Upgrade the Student Open Tasks dashboard and Task Details page layout and role-based actions to match the requested marketplace experience.",
+      "acceptanceCriteria": [
+        "When there are no open tasks, the dashboard shows exactly: \"No tasks available. Be the first to post a task.\"",
+        "Task cards include all required fields and Accept button only appears for Students and only on Open tasks",
+        "Task details page renders top section (title, status, category, payment, posted by, location, time required) and middle section (full description, proof required)",
+        "Role-based action buttons appear only when permitted by role + status"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure dashboard heading/copy stays professional, Open task list uses the card grid, and the exact empty-state string matches the requirement. Add the dashboard ad placement slot (banner) without creating a new route. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/tasks/TaskCard.tsx",
+          "operation": "modify",
+          "description": "Verify the card includes: Title, Short Description, Category, Payment ₹ (bold), Location, Posted By, Status Badge, and Student-only Accept button; ensure clicking the card navigates to Task Details. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the details layout matches requested top/middle sections and includes a small ad banner placement; keep provider view-only and admin/student action sections role-gated. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Deliver wallet and transaction history UI that reflects deposits, escrow/task payments, payouts, withdrawals, and read-only history in INR.",
+      "acceptanceCriteria": [
+        "Deposits increase provider wallet balance and create a transaction + activity log entry",
+        "Task creation debits provider wallet, locks escrow for the task, and creates a transaction + activity log entry",
+        "Admin approval of a proof releases escrow: credits 90% to accepted student wallet and 10% to admin wallet, and creates corresponding transactions",
+        "Students can create withdrawal requests up to their available balance; admin approval decreases student wallet and records a transaction",
+        "Transaction history is read-only from UI and reflects all wallet-changing operations after refresh"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/transactions/TransactionHistoryTable.tsx",
+          "operation": "modify",
+          "description": "Update the table to support showing: Date, Task (when applicable), Credit/Debit, Amount (₹), and Status. Where only basic transaction data is available, show a clear placeholder for Task and derive Credit/Debit from type; keep the table read-only. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for the extended transaction history when available (e.g., admin views), and ensure deposit/withdraw/review mutations invalidate wallet/transaction/activity queries for immediate UI updates. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Provider/ProviderDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure provider deposit workflow uses backend-connected mutation and displays updated deposit balance and transactions in ₹ after success (via query invalidation). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/WalletPage.tsx",
+          "operation": "modify",
+          "description": "Keep withdrawal request flow backend-connected with validation against available balance, and show recent transaction history as read-only with ₹ formatting. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/TransactionHistoryPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the full transaction history page uses the updated read-only table and consistent INR formatting. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Ensure Admin-only Activity Log viewing is accessible from navigation and uses backend data with a clear empty state.",
+      "acceptanceCriteria": [
+        "Each listed action creates an activity log entry with timestamp, actor, and related task (where applicable)",
+        "Admin activity logs page loads entries from backend (not mock data) and shows a clear empty state if none exist",
+        "Non-admin users are denied access to activity logs page"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Admin/ActivityLogsPage.tsx",
+          "operation": "modify",
+          "description": "Harden admin-only gating (show access denied for non-admin), ensure logs render from backend query, and provide a clear English empty state when no entries exist. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Ensure Activity Logs remains visible only for Admin navigation and is not shown for Student/Provider roles. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Add internal ads UI placements (dashboard banner, task details small banner, optional completion interstitial) and admin frequency configuration screens.",
+      "acceptanceCriteria": [
+        "Dashboard and Task Details render ad components consistently in the blue/white theme",
+        "After a task is completed, an interstitial is shown based on admin-configured frequency settings",
+        "Admin can update ad frequency settings in the UI and the settings persist in backend state",
+        "Ad earnings are recorded in INR and are visible to Admin (e.g., as a total and/or history)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/ads/AdPlacementBanner.tsx",
+          "operation": "create",
+          "description": "Create a reusable ad banner component that loads placement configuration from the backend (by AdType) and renders the content in a blue/white theme-safe card/banner style. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/ads/AdInterstitial.tsx",
+          "operation": "create",
+          "description": "Create an interstitial component that can be shown after task completion based on admin-configured frequency (client-side frequency decision using backend-provided frequency value). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for ads: fetching placements (single and list) and updating a placement/frequency for admin configuration; ensure updates invalidate placements and any admin earnings summary queries. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add the dashboard banner ad placement near the top of the task list (no new route) and keep styling consistent with the marketplace layout. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Add the small task-details banner ad placement, and show the completion interstitial when the task is completed and the frequency setting allows it. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Admin/AdsSettingsPage.tsx",
+          "operation": "create",
+          "description": "Create an Admin-only ads settings page that lists placements, allows editing frequency/content, persists changes to the backend, and shows INR earnings visibility UI as provided by backend data. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register the new /admin/ads route for the Ads settings page and ensure it is reachable via SPA deep links. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Add an Admin navigation item for Ads settings and ensure it is not visible to non-admin users. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Admin/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add a small admin-facing summary section for ads configuration/earnings visibility (INR), sourced from backend ads queries. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "summary": "Ensure all editable forms use backend mutations with React Query invalidation and that SPA deep links remain navigable on mobile.",
+      "acceptanceCriteria": [
+        "After any mutation succeeds, relevant lists/pages reflect changes without manual reload (via query invalidation)",
+        "Refreshing the browser preserves all changes because data is loaded from backend queries",
+        "Navigating directly to a task details URL works (SPA deep link) and the page loads correctly on mobile"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Audit and adjust query keys + invalidations for Profile save, Task creation, Deposit, Withdraw, Proof upload, Admin approve/reject, and Ads settings updates so all affected screens refresh immediately after mutations. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure route definitions cover all newly created pages (e.g., admin ads settings) and remain compatible with SPA deep linking on mobile. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/public/404.html",
+          "operation": "modify",
+          "description": "Verify and, if needed, adjust the SPA fallback behavior so deep links (including /tasks/:taskId and /admin/ads) are preserved and restored correctly on refresh/mobile shared links. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "summary": "Apply a consistent blue & white professional marketplace UI with card layout, sidebar navigation, modern typography, mobile responsiveness, and English-only text.",
+      "acceptanceCriteria": [
+        "Navigation uses the existing AppShell sidebar pattern and is usable on mobile (menu/stacking)",
+        "Typography, spacing, and card styles are consistent across dashboards, task pages, wallet pages, and admin pages",
+        "All user-facing labels/messages are English-only"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Refine global theme tokens (blue/white primary palette, background/surface, typography defaults) to ensure consistent professional styling across pages while preserving Tailwind/shadcn patterns. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust Tailwind theme extensions (colors/typography/container) to support the blue & white marketplace direction and consistent card spacing on mobile/desktop. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Polish header/sidebar spacing and responsive behavior for a clean marketplace layout, and ensure all visible labels/messages are English-only. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Student/StudentDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update page headings/subheadings and section layout to match the professional marketplace look (cards, spacing, English-only copy). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/Tasks/TaskDetailsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the details page layout remains clean and responsive (top/middle/action sections, English-only copy) and consistent with the blue/white theme. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}
