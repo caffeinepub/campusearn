@@ -13,9 +13,7 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   public type TaskStatus = {
     #pendingApproval;
@@ -207,6 +205,7 @@ actor {
   let taskApplications = Map.empty<Text, List.List<TaskApplication>>();
   let users = Map.empty<Principal, User>();
   let userWallets = Map.empty<Principal, Nat>();
+  let depositWallets = Map.empty<Principal, Nat>();
   let withdrawalRequests = Map.empty<Text, WithdrawalRequest>();
   let ratings = Map.empty<Text, List.List<Rating>>();
   let transactionHistory = Map.empty<Text, TransactionRecord>();
@@ -275,11 +274,11 @@ actor {
       Runtime.trap("Deposit amount must be greater than zero");
     };
 
-    let currentBalance = switch (inPlatformWallet.get(caller)) {
+    let currentBalance = switch (depositWallets.get(caller)) {
       case (null) { 0 };
       case (?balance) { balance };
     };
-    inPlatformWallet.add(caller, currentBalance + amount);
+    depositWallets.add(caller, currentBalance + amount);
 
     let newTransactionId = await getNextTransactionId(caller);
     let transactionRecord : TransactionRecord = {
@@ -458,7 +457,7 @@ actor {
       case (#student) { Runtime.trap("Unauthorized: Only TaskPosters and Businesses can create tasks") };
     };
 
-    let walletBalance = switch (inPlatformWallet.get(caller)) {
+    let walletBalance = switch (depositWallets.get(caller)) {
       case (null) { 0 };
       case (?balance) { balance };
     };
@@ -485,7 +484,7 @@ actor {
       acceptedBy = null;
     };
 
-    inPlatformWallet.add(caller, walletBalance - task.paymentAmount : Nat);
+    depositWallets.add(caller, walletBalance - task.paymentAmount : Nat);
     platformEscrow.add(taskIdText, task.paymentAmount);
 
     tasks.add(updatedTask.id, updatedTask);
@@ -897,7 +896,7 @@ actor {
       Runtime.trap("Unauthorized: Only users can view deposit balance");
     };
 
-    let balance = inPlatformWallet.get(caller);
+    let balance = depositWallets.get(caller);
     switch (balance) {
       case (null) { 0 };
       case (?balance) { balance };
@@ -992,6 +991,7 @@ actor {
     transactionHistory.add(newTransactionId, transactionRecord);
 
     addActivityLogEntry(caller, #withdrawalApproved, null);
+    addActivityLogEntry(request.user, #walletDebited, null);
   };
 
   public shared ({ caller }) func rejectWithdrawRequest(requestId : Text) : async () {

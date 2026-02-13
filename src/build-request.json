@@ -1,310 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Upgrade CampusEarn into a professional INR student task marketplace with seeded demo data, editable profiles, role workflows, wallet/escrow, ads, and admin controls (preserve existing DB)",
+  "title": "Enable in-app wallet deposits and withdrawals",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Preserve all existing backend stable state and data across this upgrade (users, tasks, wallets, escrow, withdrawals, transactions, activity logs). Do not clear, reinitialize, or remove the existing database/state during deployment or upgrade.",
-      "target": "backend",
+      "text": "Implement and/or verify a working wallet deposit flow that allows eligible roles (TaskPoster and Business) to add money to their in-app wallet balance in INR (₹), persists the updated balance, and records a deposit transaction in transaction history.",
+      "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Do NOT remove the existing database.",
-          "Keep all existing data",
-          "All changes persist after refresh"
+          "I want deposit and withdraw money inside the app"
         ]
       },
       "acceptanceCriteria": [
-        "After redeploy/upgrade and browser refresh, previously created tasks/users/wallet balances/transactions/withdrawal requests remain intact",
-        "No code path resets in-memory maps on upgrade; migration remains conditional and non-destructive"
+        "A TaskPoster/Business user can enter a deposit amount and submit it from the UI, and their deposit balance increases immediately after success.",
+        "A Student user cannot deposit (backend enforces this and the UI does not expose deposit actions to Students).",
+        "Each successful deposit creates a persisted transaction record of type Deposit, visible in the user’s transaction history table."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add support for the additional marketplace role \"Business\" alongside existing roles, and enforce role-based permissions across backend and frontend: Student can accept/submit proof/withdraw; TaskPoster and Business can deposit and create tasks; only Admin can approve/reject proofs and approve withdrawals; providers can view progress but cannot complete/review their own tasks.",
+      "text": "Implement and/or verify a working wallet withdrawal flow that allows a Student to request a withdrawal from their in-app wallet balance, persists the withdrawal request, and allows an Admin to approve/reject the request; on approval, the Student wallet balance is debited and a withdrawal transaction is recorded.",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "fully functional professional marketplace system for students, TaskPosters/Business, and Admin",
-          "Only Student can accept tasks",
-          "Only TaskPoster/Business can create tasks",
-          "Only Admin can approve/reject"
+          "I want deposit and withdraw money inside the app"
         ]
       },
       "acceptanceCriteria": [
-        "A \"Business\" role exists and is selectable/represented in UI and backend authorization checks",
-        "Backend rejects disallowed actions with clear errors (e.g., Student cannot create tasks; Provider cannot review tasks)",
-        "Frontend navigation/dashboard content is role-appropriate for Student/TaskPoster/Business/Admin"
+        "A Student can submit a withdrawal request from the Wallet page, and the request is persisted.",
+        "An Admin can see pending withdrawal requests in the Admin Withdrawals screen and approve or reject them.",
+        "When an Admin approves a withdrawal, the student’s wallet balance decreases by the requested amount and a persisted Withdrawal transaction appears in the student’s transaction history.",
+        "If an Admin rejects a withdrawal, the student’s wallet balance is not debited."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Implement deterministic demo seeding that (a) creates the 6 requested demo user profiles and initial wallet balances, and (b) creates the 10 requested demo tasks with all required fields, without deleting existing data. Seeding must be idempotent (safe to run multiple times) and must ensure seeded tasks appear immediately on the Student dashboard (Status = Open).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Create pre-filled users for testing",
-          "Automatically create 10 demo tasks for testing",
-          "Do NOT remove the existing database."
-        ]
-      },
-      "acceptanceCriteria": [
-        "A backend seeding routine exists that can be triggered without wiping state and does not duplicate records when re-run",
-        "Seeded users match exactly: Rahul(9999999999, rahul@test.com, ₹0, Student), Sneha(8888888888, sneha@test.com, ₹0, Student), Priya(7777777777, priya@test.com, ₹500, TaskPoster), Karan(6666666666, karan@test.com, ₹300, TaskPoster), Aman(5555555555, aman@test.com, ₹1000, Business), Admin(4444444444, admin@test.com, ₹0, Admin)",
-        "Seeded tasks count = 10 and are queryable via the existing open-tasks flow with required fields populated and Accepted_By/Proof_Upload empty",
-        "Seeding does not modify or remove any pre-existing users/tasks/wallets"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Update the user profile data model and UI to remove student-year/college references and to match the requested Profile Form fields: Full Name, Contact Number, Email (editable), Wallet (read-only), Role (read-only). Profile must be pre-filled from the database for the current logged-in user and saved changes must persist after refresh.",
+      "text": "Ensure transaction history retrieval and display supports showing deposit and withdrawal records for the current user with correct INR formatting and correct credit/debit indicators.",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Remove any student-year references.",
-          "PROFILE FORM - Fields: Full Name, Contact Number, Email (editable), Wallet (read-only), Role (read-only)",
-          "Save button updates database instantly",
-          "Changes persist after refresh"
+          "I want deposit and withdraw money inside the app"
         ]
       },
       "acceptanceCriteria": [
-        "No UI pages reference or require college/year inputs for profile completion",
-        "Current user sees profile fields pre-filled from backend; edits to name/contact/email persist after refresh",
-        "Wallet and Role are displayed but not editable in the profile form",
-        "Backend exposes a safe profile update method that does not allow changing wallet balance or role via profile updates"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Ensure all money values across the app are displayed and handled as Indian Rupees (₹), including wallet balances, task payments, escrow, commissions, deposits, withdrawals, ad earnings, and transaction history.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "All payments and wallets must be in Indian Rupees (₹)."
-        ]
-      },
-      "acceptanceCriteria": [
-        "All currency UI displays use the ₹ prefix and no other currency symbols",
-        "All wallet/payment logic uses integer INR amounts consistently (no mixed units)"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Implement the editable Task Creation Form for TaskPoster and Business: fields Title, Short Description, Full Description, Payment (₹), Category, Location, Proof Required (Yes/No). On create, save task to database, set status to Open, and deduct the payment from the provider wallet into escrow; prevent creation if insufficient balance.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "TASK CREATION FORM - Available to TaskPoster / Business only",
-          "Fields editable: Title, Short Description, Full Description, Payment (₹), Category, Location, Proof Required",
-          "Wallet automatically deducts payment (escrow)",
-          "If insufficient balance → prevent task creation"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Only TaskPoster/Business can access/submit the create-task form; Students cannot create tasks",
-        "Creating a task decreases provider deposit/wallet balance by the payment amount and increases escrow locked for that task",
-        "Task appears immediately in Open tasks on Student dashboard (react-query invalidation/refresh)",
-        "Backend rejects task creation when wallet balance is insufficient and frontend surfaces the error"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Implement/validate the full task status workflow and anti-abuse constraints in the backend and reflect them in UI: Open → In Progress → Proof Submitted → Under Review → Completed; Reject returns task to In Progress. Prevent duplicate acceptance, accepting own task, and any provider editing of a task once accepted.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "TASK STATUS FLOW - Open (Green) → In Progress (Orange) → Proof Submitted (Purple) → Under Review → Completed (Blue)",
-          "Reject → Back to In Progress",
-          "Prevent duplicate acceptance, accepting own task, or editing after accepted"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Student can accept an Open task exactly once; subsequent accept attempts fail",
-        "Provider cannot accept their own task; backend enforces this",
-        "Only the accepted student can submit proof, and only when task is In Progress",
-        "Admin can approve/reject only when proof is submitted; approve completes and reject returns to In Progress",
-        "Any attempt to mutate restricted fields/statuses outside the allowed transitions is rejected server-side"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Upgrade the Student-facing Task Dashboard and Task Details experience to match the requested marketplace layout and role-based actions: Dashboard lists all Open tasks with card fields (Title, Short Description, Category, Payment ₹ bold, Location, Posted By, Status Badge, Accept button for Students only); clicking a card opens Task Details; Task Details shows the specified top and middle sections and role-based actions (Student accept/upload; Admin approve/reject; provider view-only).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "TASK DASHBOARD & DETAILS",
-          "Task card includes: Title, Short Description, Category, Payment (₹ bold), Location, Posted By, Status Badge, Accept Button (Students only)",
-          "Clicking a task opens Task Details page",
-          "Task Details Page: ... Role-Based Actions"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When there are no open tasks, the dashboard shows exactly: \"No tasks available. Be the first to post a task.\"",
-        "Task cards include all required fields and Accept button only appears for Students and only on Open tasks",
-        "Task details page renders top section (title, status, category, payment, posted by, location, time required) and middle section (full description, proof required)",
-        "Role-based action buttons appear only when permitted by role + status"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Implement the end-to-end wallet workflows with secure persistence: provider deposits (TaskPoster/Business), escrow deduction on task creation, completion payout split (90% to Student, 10% to Admin), student withdrawal request with admin approval, and an immutable transaction history that shows Date, Task (when applicable), Credit/Debit, Amount (₹), and Status.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "WALLET, DEPOSIT & WITHDRAWAL",
-          "Escrow: 90% → Student, 10% → Admin on completion",
-          "Students can withdraw → Admin approves → wallet updates",
-          "Transaction History shows: Date, Task, Credit/Debit, Amount (₹), Status",
-          "Wallet protected; cannot manually edit"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Deposits increase provider wallet balance and create a transaction + activity log entry",
-        "Task creation debits provider wallet, locks escrow for the task, and creates a transaction + activity log entry",
-        "Admin approval of a proof releases escrow: credits 90% to accepted student wallet and 10% to admin wallet, and creates corresponding transactions",
-        "Students can create withdrawal requests up to their available balance; admin approval decreases student wallet and records a transaction",
-        "Transaction history is read-only from UI and reflects all wallet-changing operations after refresh"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Ensure the system records a complete Activity Log for all required actions (Task Created, Accepted, Proof Uploaded, Approved, Rejected, Wallet Credited/Debited, Withdrawal Requested/Approved) and provide an Admin-only view that reads from the backend.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "ACTIVITY LOG - Record all actions",
-          "Admin can view full activity logs"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Each listed action creates an activity log entry with timestamp, actor, and related task (where applicable)",
-        "Admin activity logs page loads entries from backend (not mock data) and shows a clear empty state if none exist",
-        "Non-admin users are denied access to activity logs page"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Add Ads monetization UI placements and backend configuration: show a dashboard banner, a small banner in task details, and an optional interstitial after task completion. Admin can configure frequency. Record ad earnings in ₹ with a simple internal earnings model (no third-party ad network integration).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "ADS MONETIZATION - Banner on Dashboard - Small banner in Task Details - Optional interstitial after task completion - Admin controls frequency - Earnings recorded in ₹"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Dashboard and Task Details render ad components consistently in the blue/white theme",
-        "After a task is completed, an interstitial is shown based on admin-configured frequency settings",
-        "Admin can update ad frequency settings in the UI and the settings persist in backend state",
-        "Ad earnings are recorded in INR and are visible to Admin (e.g., as a total and/or history)"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Ensure all editable forms (Profile, Task Creation, Deposit, Withdraw, Proof Upload, Admin Approve/Reject) are connected to backend mutations and update the UI immediately via React Query cache invalidation; all changes must persist after refresh and deep links must remain navigable on mobile via shared link.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Make everything editable and connected to the database",
-          "Save button updates database instantly",
-          "All changes persist after refresh",
-          "App works on mobile via shared link, clickable and fully functional"
-        ]
-      },
-      "acceptanceCriteria": [
-        "After any mutation succeeds, relevant lists/pages reflect changes without manual reload (via query invalidation)",
-        "Refreshing the browser preserves all changes because data is loaded from backend queries",
-        "Navigating directly to a task details URL works (SPA deep link) and the page loads correctly on mobile"
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "text": "Apply the requested UI design direction consistently across all pages: blue & white theme, clean marketplace layout, card-based task display, sidebar navigation, modern typography, and mobile responsive behavior; ensure all user-facing text is in English.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "UI DESIGN: - Blue & white theme - Clean marketplace layout - Card-based task display - Sidebar navigation - Modern typography - Mobile responsive - Professional startup look",
-          "Use English for any user-facing text"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Navigation uses the existing AppShell sidebar pattern and is usable on mobile (menu/stacking)",
-        "Typography, spacing, and card styles are consistent across dashboards, task pages, wallet pages, and admin pages",
-        "All user-facing labels/messages are English-only"
+        "Transaction history loads without errors for both Student and Provider roles.",
+        "Deposit transactions are displayed as credits and Withdrawal transactions are displayed as debits.",
+        "All transaction amounts are displayed with INR (₹) formatting consistently across wallet and transaction history screens."
       ]
     }
   ],
   "constraints": [
-    "Do not remove, reset, or clear the existing backend state/database during this upgrade",
-    "Backend must remain a single Motoko actor in backend/main.mo; add backend logic there and add migration.mo only if state migration is required to preserve existing data",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui; compose existing UI components instead",
-    "No third-party authentication providers beyond Internet Identity; no external databases or ad network integrations"
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit any files under frontend/src/components/ui or other frontend immutable paths listed in SYSTEM_CONTEXT; compose existing UI components instead.",
+    "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Integrating real money payment gateways/banks/UPI rails (the app will simulate wallet deposits/withdrawals as internal ledger operations)",
-    "Real ad network SDK integration (ads are internal placements with configurable frequency and recorded earnings only)",
-    "WebSockets or real-time push updates beyond standard polling/refetching via React Query"
+    "Integrating real payment gateways, UPI collection, bank transfers, or any external payment processor.",
+    "Implementing refunds/chargebacks or multi-currency support.",
+    "Adding new roles or changing the existing task escrow/payment split logic beyond what is required for deposit/withdraw flows."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [
-      "Professional campus task marketplace with Student/TaskPoster/Business/Admin roles",
-      "INR (₹) wallet with escrow, payouts, deposits, withdrawals, and transaction history",
-      "Seeded demo users and tasks for end-to-end testing",
-      "Admin-controlled ads monetization and activity logging"
-    ],
-    "goalsToRemove": [],
-    "preferencesToAdd": [
-      "Blue & white professional startup UI theme",
-      "All user-facing text in English"
-    ],
-    "preferencesToRemove": [],
-    "miscToAdd": [
-      "Do not remove/reset existing database; all changes must persist after refresh"
-    ],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

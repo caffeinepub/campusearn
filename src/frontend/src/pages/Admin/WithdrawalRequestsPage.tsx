@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { useGetPendingWithdrawals, useApproveWithdrawal, useRejectWithdrawal } from '../../hooks/useQueries';
-import { DollarSign, User, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { DollarSign, User, Calendar, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import { formatInr } from '../../utils/formatInr';
 
 export default function WithdrawalRequestsPage() {
   const { data: withdrawals, isLoading } = useGetPendingWithdrawals();
@@ -36,7 +37,7 @@ export default function WithdrawalRequestsPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading withdrawal requests...</p>
         </div>
       </div>
@@ -76,7 +77,7 @@ export default function WithdrawalRequestsPage() {
                     <CardDescription>Request ID: {request.id}</CardDescription>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-primary">₹{Number(request.amount)}</div>
+                    <div className="text-2xl font-bold text-primary">{formatInr(request.amount)}</div>
                   </div>
                 </div>
               </CardHeader>
@@ -104,8 +105,17 @@ export default function WithdrawalRequestsPage() {
                     disabled={isApproving || isRejecting}
                     className="flex-1 gap-2"
                   >
-                    <CheckCircle className="h-4 w-4" />
-                    {isApproving ? 'Approving...' : 'Approve'}
+                    {isApproving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        Approve
+                      </>
+                    )}
                   </Button>
                   <Button
                     onClick={() => handleReject(request.id)}
@@ -113,8 +123,17 @@ export default function WithdrawalRequestsPage() {
                     variant="destructive"
                     className="flex-1 gap-2"
                   >
-                    <XCircle className="h-4 w-4" />
-                    {isRejecting ? 'Rejecting...' : 'Reject'}
+                    {isRejecting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Rejecting...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4" />
+                        Reject
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
